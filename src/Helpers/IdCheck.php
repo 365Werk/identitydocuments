@@ -6,7 +6,7 @@ use Exception;
 
 class IdCheck
 {
-    public static function CheckDigit(string $subject, string $check): ?bool
+    public static function checkDigit(string $subject, string $check): ?bool
     {
         if (is_numeric($check)) {
             $check = intval($check);

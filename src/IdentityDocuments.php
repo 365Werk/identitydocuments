@@ -11,7 +11,7 @@ use werk365\IdentityDocuments\Helpers\IdStr;
 class IdentityDocuments
 {
     // Expexts 1 or 2 image files in POST request, one front_img and one back_img
-    public static function annotate(Request $request)
+    public static function parse(Request $request)
     {
         $imageAnnotator = new ImageAnnotatorClient(
             ['credentials' => config('google_key')]
@@ -44,17 +44,17 @@ class IdentityDocuments
         }
 
         // Get MRZ lines from text
-        $document = self::GetMRZ($lines);
+        $document = self::getMRZ($lines);
 
         // Parse lines to known values
-        $document = self::ParseMRZ($document);
+        $document = self::parseMRZ($document);
 
         // Validate values with MRZ checkdigits
-        if ($e = self::ValidateMRZ($document)) {
+        if ($e = self::validateMRZ($document)) {
             throw new Exception("Error validating MRZ, invalid $e.");
         }
 
-        $document = self::StripFiller($document);
+        $document = self::stripFiller($document);
 
         $all = [];
         if ($texts->front_img) {
@@ -74,7 +74,7 @@ class IdentityDocuments
         return json_encode($document);
     }
 
-    private static function GetMRZ(array $lines): object
+    private static function getMRZ(array $lines): object
     {
         $document = (object) [
             'type' => null,
@@ -104,7 +104,7 @@ class IdentityDocuments
         return $document;
     }
 
-    private static function ParseMRZ(object $document): object
+    private static function parseMRZ(object $document): object
     {
         if ($document->type === 'TD1') {
             // Row 1
@@ -177,29 +177,29 @@ class IdentityDocuments
         return $document;
     }
 
-    private static function ValidateMRZ($document): ?string
+    private static function validateMRZ($document): ?string
     {
         // Validate MRZ
-        if (! IdCheck::CheckDigit(
+        if (!IdCheck::checkDigit(
             $document->parsed->document_number,
             $document->parsed->check_document_number
         )) {
             return 'Document number';
         }
-        if (! IdCheck::CheckDigit(
+        if (!IdCheck::checkDigit(
             $document->parsed->date_of_birth,
             $document->parsed->check_date_of_birth
         )) {
             return 'Date of birth';
         }
-        if (! IdCheck::CheckDigit(
+        if (!IdCheck::checkDigit(
             $document->parsed->expiration,
             $document->parsed->check_expiration
         )) {
             return 'Expiration date';
         }
         if ($document->type === 'TD3') {
-            if (! IdCheck::CheckDigit(
+            if (!IdCheck::checkDigit(
                 $document->parsed->personal_number,
                 $document->parsed->check_personal_number
             )) {
@@ -210,7 +210,7 @@ class IdentityDocuments
         return null;
     }
 
-    private static function StripFiller(object $document): object
+    private static function stripFiller(object $document): object
     {
         $names = explode('<<', $document->parsed->names, 2);
         $document->parsed->surname = trim(str_replace('<', ' ', $names[0]));
