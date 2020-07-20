@@ -1,8 +1,6 @@
 <?php
 
-
 namespace werk365\IdentityDocuments\Helpers;
-
 
 class IdStr
 {
@@ -17,6 +15,7 @@ class IdStr
                 array_push($extracts, $extract);
             }
         }
+
         return $extracts;
     }
 }

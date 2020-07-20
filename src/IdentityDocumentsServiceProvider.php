@@ -48,7 +48,7 @@ class IdentityDocumentsServiceProvider extends ServiceProvider
     {
         return ['identitydocuments'];
     }
-    
+
     /**
      * Console-specific booting.
      *
