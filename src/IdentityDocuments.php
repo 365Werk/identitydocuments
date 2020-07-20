@@ -10,7 +10,7 @@ use werk365\IdentityDocuments\Helpers\IdStr;
 
 class IdentityDocuments
 {
-    // Expexts 1 or 2 image files in POST request, one front_img and one back_img
+    // Expects 1 or 2 image files in POST request, one front_img and one back_img
     public static function parse(Request $request)
     {
         $imageAnnotator = new ImageAnnotatorClient(
