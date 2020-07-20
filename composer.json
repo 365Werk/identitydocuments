@@ -1,7 +1,7 @@
 {
     "name": "werk365/identitydocuments",
     "description": "Package to parse identity documents like passports",
-    "license": "",
+    "license": "MIT",
     "authors": [
         {
             "name": "Hergen Dillema",
