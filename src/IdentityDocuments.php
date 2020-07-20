@@ -17,24 +17,24 @@ class IdentityDocuments
             ['credentials' => config('google_key')]
         );
 
-        $images = (object)[
+        $images = (object) [
             'front_img' => ($request->front_img) ? file_get_contents($request->front_img->getRealPath()) : null,
             'back_img' => ($request->back_img) ? file_get_contents($request->back_img->getRealPath()) : null,
         ];
-        $responses = (object)[
+        $responses = (object) [
             'front_img' => ($request->front_img) ? $imageAnnotator->textDetection($images->front_img) : null,
             'back_img' => ($request->back_img) ? $imageAnnotator->textDetection($images->back_img) : null,
         ];
 
-        $texts = (object)[
+        $texts = (object) [
             'front_img' => ($request->front_img) ? $responses->front_img->getTextAnnotations() : null,
             'back_img' => ($request->back_img) ? $responses->back_img->getTextAnnotations() : null,
         ];
 
         // Combine text found on both images into one string
-        $full_text = "";
-        $full_text .= ($request->front_img) ? $texts->front_img[0]->getDescription() : "";
-        $full_text .= ($request->back_img) ? $texts->back_img[0]->getDescription() : "";
+        $full_text = '';
+        $full_text .= ($request->front_img) ? $texts->front_img[0]->getDescription() : '';
+        $full_text .= ($request->back_img) ? $texts->back_img[0]->getDescription() : '';
 
         // Split string on newlines into array
         $lines = preg_split('/\r\n|\r|\n/', $full_text);
@@ -70,15 +70,16 @@ class IdentityDocuments
         }
 
         $document->raw = $all;
+
         return json_encode($document);
     }
 
     private static function GetMRZ(array $lines): object
     {
-        $document = (object)[
+        $document = (object) [
             'type' => null,
             'MRZ' => [],
-            'parsed' => (object)[],
+            'parsed' => (object) [],
         ];
         foreach ($lines as $key => $line) {
             if (strlen($line) === 30 && ($line[0] === 'I' || $line[0] === 'A' || $line[0] === 'C') && strlen($lines[$key + 1]) === 30 && strlen($lines[$key + 2]) === 30) {
@@ -171,7 +172,7 @@ class IdentityDocuments
                 ]
             ));
         }
-        $document->parsed = (object)$document->parsed;
+        $document->parsed = (object) $document->parsed;
 
         return $document;
     }
@@ -179,26 +180,26 @@ class IdentityDocuments
     private static function ValidateMRZ($document): ?string
     {
         // Validate MRZ
-        if (!IdCheck::CheckDigit(
+        if (! IdCheck::CheckDigit(
             $document->parsed->document_number,
             $document->parsed->check_document_number
         )) {
             return 'Document number';
         }
-        if (!IdCheck::CheckDigit(
+        if (! IdCheck::CheckDigit(
             $document->parsed->date_of_birth,
             $document->parsed->check_date_of_birth
         )) {
             return 'Date of birth';
         }
-        if (!IdCheck::CheckDigit(
+        if (! IdCheck::CheckDigit(
             $document->parsed->expiration,
             $document->parsed->check_expiration
         )) {
             return 'Expiration date';
         }
         if ($document->type === 'TD3') {
-            if (!IdCheck::CheckDigit(
+            if (! IdCheck::CheckDigit(
                 $document->parsed->personal_number,
                 $document->parsed->check_personal_number
             )) {
