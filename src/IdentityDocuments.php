@@ -180,26 +180,26 @@ class IdentityDocuments
     private static function validateMRZ($document): ?string
     {
         // Validate MRZ
-        if (!IdCheck::checkDigit(
+        if (! IdCheck::checkDigit(
             $document->parsed->document_number,
             $document->parsed->check_document_number
         )) {
             return 'Document number';
         }
-        if (!IdCheck::checkDigit(
+        if (! IdCheck::checkDigit(
             $document->parsed->date_of_birth,
             $document->parsed->check_date_of_birth
         )) {
             return 'Date of birth';
         }
-        if (!IdCheck::checkDigit(
+        if (! IdCheck::checkDigit(
             $document->parsed->expiration,
             $document->parsed->check_expiration
         )) {
             return 'Expiration date';
         }
         if ($document->type === 'TD3') {
-            if (!IdCheck::checkDigit(
+            if (! IdCheck::checkDigit(
                 $document->parsed->personal_number,
                 $document->parsed->check_personal_number
             )) {
