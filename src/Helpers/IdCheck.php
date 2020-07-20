@@ -1,6 +1,5 @@
 <?php
 
-
 namespace werk365\IdentityDocuments\Helpers;
 
 use Exception;
@@ -11,7 +10,7 @@ class IdCheck
     {
         if (is_numeric($check)) {
             $check = intval($check);
-        } else if ($check === '<') {
+        } elseif ($check === '<') {
             return true;
         }
 
@@ -24,12 +23,13 @@ class IdCheck
                 $weight -= 3;
             }
             $value = self::toInt($character);
-            if (is_null($value)) throw new Exception('Error validating MRZ');
+            if (is_null($value)) {
+                throw new Exception('Error validating MRZ');
+            }
             $value = $value * $patern[$weight];
             $total += $value;
         }
         $remainder = $total % 10;
-
 
         return ($remainder === $check) ? true : false;
     }
@@ -40,7 +40,7 @@ class IdCheck
         $alphabet = range('A', 'Z');
         if ($character === '<') {
             $value = 0;
-        } else if (is_numeric($character)) {
+        } elseif (is_numeric($character)) {
             $value = intval($character);
         } else {
             $character = strtoupper($character);
@@ -48,7 +48,7 @@ class IdCheck
                 $value = array_search($character, $alphabet) + 10;
             }
         }
+
         return $value;
     }
-
 }

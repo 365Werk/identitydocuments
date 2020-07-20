@@ -2,17 +2,16 @@
 
 namespace werk365\IdentityDocuments;
 
+use Exception;
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
 use Illuminate\Http\Request;
-use werk365\IdentityDocuments\Helpers\IdStr;
 use werk365\IdentityDocuments\Helpers\IdCheck;
-use Exception;
+use werk365\IdentityDocuments\Helpers\IdStr;
 
 class IdentityDocuments
 {
     public static function annotate(Request $request)
     {
-
         $imageAnnotator = new ImageAnnotatorClient(
             ['credentials' => config('google_key')]
         );
@@ -23,7 +22,6 @@ class IdentityDocuments
         $full_text = $texts[0]->getDescription();
 
         $lines = preg_split('/\r\n|\r|\n/', $full_text);
-
 
         foreach ($lines as $key => $line) {
             $lines[$key] = preg_replace('/\s+/', '', $line);
@@ -36,45 +34,46 @@ class IdentityDocuments
         $document = self::ParseMRZ($document);
 
         // Validate values with MRZ checkdigits
-        if($e = self::ValidateMRZ($document)){
+        if ($e = self::ValidateMRZ($document)) {
             throw new Exception("Error validating MRZ, invalid $e.");
-        };
+        }
 
         $document = self::StripFiller($document);
 
         return json_encode($document->parsed);
     }
 
-    private static function GetMRZ(array $lines):object
+    private static function GetMRZ(array $lines): object
     {
-        $document = (object)[
-            "type" => null,
-            "MRZ" => [],
-            "parsed" => (object)[],
+        $document = (object) [
+            'type' => null,
+            'MRZ' => [],
+            'parsed' => (object) [],
         ];
         foreach ($lines as $key => $line) {
-            if (strlen($line) === 30 && ($line[0] === "I" || $line[0] === "A" || $line[0] === "C") && strlen($lines[$key + 1]) === 30 && strlen($lines[$key + 2]) === 30) {
+            if (strlen($line) === 30 && ($line[0] === 'I' || $line[0] === 'A' || $line[0] === 'C') && strlen($lines[$key + 1]) === 30 && strlen($lines[$key + 2]) === 30) {
                 $document->type = 'TD1';
                 $document->MRZ[0] = $line;
                 $document->MRZ[1] = $lines[$key + 1];
                 $document->MRZ[2] = $lines[$key + 2];
                 break;
-            } elseif (strlen($line) === 44 && ($line[0] === "P") && strlen($lines[$key + 1]) === 44) {
+            } elseif (strlen($line) === 44 && ($line[0] === 'P') && strlen($lines[$key + 1]) === 44) {
                 $document->type = 'TD3';
                 $document->MRZ[0] = $line;
                 $document->MRZ[1] = $lines[$key + 1];
                 break;
-            } elseif (strlen($line) === 36 && ($line[0] === "V") && strlen($lines[$key + 1]) === 36) {
+            } elseif (strlen($line) === 36 && ($line[0] === 'V') && strlen($lines[$key + 1]) === 36) {
                 $document->type = 'VISA';
                 $document->MRZ[0] = $line;
                 $document->MRZ[1] = $lines[$key + 1];
                 break;
             }
         }
+
         return $document;
     }
 
-    private static function ParseMRZ(object $document):object
+    private static function ParseMRZ(object $document): object
     {
         if ($document->type === 'TD1') {
             // Row 1
@@ -109,10 +108,9 @@ class IdentityDocuments
             $document->parsed = array_merge($document->parsed, IdStr::substrs(
                 $document->MRZ[2],
                 [
-                    [0, 30, 'names']
+                    [0, 30, 'names'],
                 ]
             ));
-
         } elseif ($document->type === 'TD3') {
             // Row 1
             $document->parsed = IdStr::substrs(
@@ -142,47 +140,55 @@ class IdentityDocuments
                     [43, 1, 'check_general'],
                 ]
             ));
-
         }
-        $document->parsed = (object)$document->parsed;
+        $document->parsed = (object) $document->parsed;
+
         return $document;
     }
 
-    private static function ValidateMRZ($document):?string
+    private static function ValidateMRZ($document): ?string
     {
         // Validate MRZ
-        if (!IdCheck::CheckDigit(
+        if (! IdCheck::CheckDigit(
             $document->parsed->document_number,
             $document->parsed->check_document_number
-        )) return 'Document number';
-        if (!IdCheck::CheckDigit(
+        )) {
+            return 'Document number';
+        }
+        if (! IdCheck::CheckDigit(
             $document->parsed->date_of_birth,
             $document->parsed->check_date_of_birth
-        )) return 'Date of birth';
-        if (!IdCheck::CheckDigit(
+        )) {
+            return 'Date of birth';
+        }
+        if (! IdCheck::CheckDigit(
             $document->parsed->expiration,
             $document->parsed->check_expiration
-        )) return 'Expiration date';
-        if($document->type === 'TD3') {
-            if (!IdCheck::CheckDigit(
+        )) {
+            return 'Expiration date';
+        }
+        if ($document->type === 'TD3') {
+            if (! IdCheck::CheckDigit(
                 $document->parsed->personal_number,
                 $document->parsed->check_personal_number
-            )) return 'Personal number';
+            )) {
+                return 'Personal number';
+            }
         }
 
         return null;
     }
 
-    private static function StripFiller(object $document):object
+    private static function StripFiller(object $document): object
     {
-        $names = explode("<<", $document->parsed->names, 2);
-        $document->parsed->surname = trim(str_replace("<", " ", $names[0]));
-        $document->parsed->given_names = trim(str_replace("<", " ", $names[1]));
+        $names = explode('<<', $document->parsed->names, 2);
+        $document->parsed->surname = trim(str_replace('<', ' ', $names[0]));
+        $document->parsed->given_names = trim(str_replace('<', ' ', $names[1]));
         unset($document->parsed->names);
-        foreach($document->parsed as $key=>$value){
-            $document->parsed->$key = trim(str_replace("<", " ", $value));
+        foreach ($document->parsed as $key=>$value) {
+            $document->parsed->$key = trim(str_replace('<', ' ', $value));
         }
+
         return $document;
     }
-
 }
