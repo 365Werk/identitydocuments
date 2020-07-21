@@ -1,10 +1,10 @@
-# IdentityDocuments
+# Laravel Identity Documents
 
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Total Downloads][ico-downloads]][link-downloads]
 [![StyleCI][ico-styleci]][link-styleci]
 
-Package to parse Machine Readable Passports and other travel documents from image.
+Package to parse Machine Readable Passports and other travel documents from image in Laravel.
 
 MRZ is parsed and validated by check numbers and returned.
 
