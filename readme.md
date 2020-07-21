@@ -17,6 +17,22 @@ $ composer require werk365/identitydocuments
 ```
 
 ## Usage
+his package uses Google's Vision API to do OCR, this requires you to make a service account and download the JSON keyfile. In order to use it in this project, store the key found in the file as an array in config/google_key.php like this:
+```php
+return [
+    "type" => "service_account",
+    "project_id" => "",
+    "private_key_id" => "",
+    "private_key" => "",
+    "client_email" => "",
+    "client_id" => "",
+    "auth_uri" => "",
+    "token_uri" => "",
+    "auth_provider_x509_cert_url" => "",
+    "client_x509_cert_url" => "",
+];
+```
+
 Call the parse method from anywhere passing a POST request. The method expects 'front_img' and 'back_img' to be the images of the travel documents, although you can use only one if a single image contains all required data.
 ```php
 use werk365\IdentityDocuments\IdentityDocuments;
