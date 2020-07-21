@@ -200,7 +200,7 @@ class IdentityDocuments
         }
 
         $document->parsed = (object) $document->parsed;
-        $document->parsed->general = implode("",$document->parsed->general);
+        $document->parsed->general = implode('', $document->parsed->general);
 
         return $document;
     }
