@@ -158,7 +158,6 @@ class IdentityDocuments
                     [18, 11],
                 ]
             ));
-
         } elseif ($document->type === 'TD3') {
             // Row 1
             $document->parsed = IdStr::substrs(
