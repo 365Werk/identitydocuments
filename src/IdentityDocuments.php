@@ -142,6 +142,23 @@ class IdentityDocuments
                     [0, 30, 'names'],
                 ]
             ));
+
+            $document->parsed['general'] = IdStr::substrs(
+                $document->MRZ[0],
+                [
+                    [5, 25],
+                ]
+            );
+
+            $document->parsed['general'] = array_merge($document->parsed['general'], IdStr::substrs(
+                $document->MRZ[1],
+                [
+                    [0, 7],
+                    [8, 7],
+                    [18, 11],
+                ]
+            ));
+
         } elseif ($document->type === 'TD3') {
             // Row 1
             $document->parsed = IdStr::substrs(
@@ -171,8 +188,19 @@ class IdentityDocuments
                     [43, 1, 'check_general'],
                 ]
             ));
+
+            $document->parsed['general'] = IdStr::substrs(
+                $document->MRZ[1],
+                [
+                    [0, 10],
+                    [13, 7],
+                    [21, 22],
+                ]
+            );
         }
+
         $document->parsed = (object) $document->parsed;
+        $document->parsed->general = implode("",$document->parsed->general);
 
         return $document;
     }
@@ -205,6 +233,12 @@ class IdentityDocuments
             )) {
                 return 'Personal number';
             }
+        }
+        if (! IdCheck::checkDigit(
+            $document->parsed->general,
+            $document->parsed->check_general
+        )) {
+            return 'General MRZ check';
         }
 
         return null;
