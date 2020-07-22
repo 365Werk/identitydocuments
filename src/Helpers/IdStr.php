@@ -18,4 +18,14 @@ class IdStr
 
         return $extracts;
     }
+
+    public static function convert(string $string): string
+    {
+        $string = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $string);
+        $string = preg_replace("/([ ]|[-])/", "<", $string);
+        $string = preg_replace("/\p{P}/u", "", $string);
+        $string = strtoupper($string);
+
+        return $string;
+    }
 }
