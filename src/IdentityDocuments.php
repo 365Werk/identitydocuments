@@ -6,6 +6,7 @@ use Exception;
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
 use Illuminate\Http\Request;
 use werk365\IdentityDocuments\Helpers\IdCheck;
+use werk365\IdentityDocuments\Helpers\IdParseRaw;
 use werk365\IdentityDocuments\Helpers\IdStr;
 
 class IdentityDocuments
@@ -59,18 +60,24 @@ class IdentityDocuments
         $all = [];
         if ($texts->front_img) {
             foreach ($texts->front_img as $text) {
-                array_push($all, $text->getDescription());
+                array_push($all, [
+                    'original' => $text->getDescription(),
+                    'converted' => IdStr::convert($text->getDescription()),
+                ]);
             }
         }
 
         if ($texts->back_img) {
             foreach ($texts->back_img as $text) {
-                array_push($all, $text->getDescription());
+                array_push($all, [
+                    'original' => $text->getDescription(),
+                    'converted' => IdStr::convert($text->getDescription()),
+                    ]);
             }
         }
 
         $document->raw = $all;
-
+        $document = IdParseRaw::parse($document);
         return json_encode($document);
     }
 
