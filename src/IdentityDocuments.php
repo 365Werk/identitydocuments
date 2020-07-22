@@ -72,13 +72,14 @@ class IdentityDocuments
                 array_push($all, [
                     'original' => $text->getDescription(),
                     'converted' => IdStr::convert($text->getDescription()),
-                    ]);
+                ]);
             }
         }
 
         $document->raw = $all;
         $document = IdParseRaw::parse($document);
         unset($document->raw);
+
         return json_encode($document);
     }
 
