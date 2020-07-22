@@ -78,6 +78,7 @@ class IdentityDocuments
 
         $document->raw = $all;
         $document = IdParseRaw::parse($document);
+        unset($document->raw);
         return json_encode($document);
     }
 
