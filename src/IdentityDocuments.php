@@ -53,6 +53,7 @@ class IdentityDocuments
         if ($e = self::validateMRZ($document)) {
             $document->error = $e;
             $document->success = false;
+
             return json_encode($document);
         }
 
