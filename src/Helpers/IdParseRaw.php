@@ -86,20 +86,21 @@ class IdParseRaw
                 $surname = $document->parsed->surname;
                 $surname_characters = str_split($surname);
                 $surname_search = implode('*', $surname_characters).'*';
+
                 if ($surname === $raw['converted']) {
                     $document->matched->surname = [
                         'value' => $raw['original'],
                         'confidence' => 1,
                     ];
                 } elseif (Str::startsWith($raw['converted'], $surname)) {
-                    if (! $document->matched->surname || count($document->matched->surname['value']) > count($raw['value'])) {
+                    if (! isset($document->matched->surname) || strlen($document->matched->surname['value']) > strlen($raw['original'])) {
                         $document->matched->surname = [
                             'value' => $raw['original'],
                             'confidence' => 0.9,
                         ];
                     }
                 } elseif (Str::is($surname_search, $raw['converted'])) {
-                    if (! $document->matched->surname || count($document->matched->surname['value']) > count($raw['value'])) {
+                    if (! isset($document->matched->surname) || strlen($document->matched->surname['value']) > strlen($raw['original'])) {
                         $document->matched->surname = [
                             'value' => $raw['original'],
                             'confidence' => 0.75,
@@ -108,28 +109,37 @@ class IdParseRaw
                 }
                 // given_names
                 $given_names = $document->parsed->given_names;
-                $given_names_characters = str_split($given_names);
-                $given_names_search = implode('*', $given_names_characters).'*';
-                if ($given_names === $raw['converted']) {
-                    $document->matched->given_names = [
-                        'value' => $raw['original'],
-                        'confidence' => 1,
-                    ];
-                } elseif (Str::startsWith($raw['converted'], $given_names)) {
-                    if (! $document->matched->given_names || count($document->matched->given_names['value']) > count($raw['value'])) {
-                        $document->matched->given_names = [
+                $given_names_split = explode(" ", $given_names);
+                $given_names_search = [];
+                foreach($given_names_split as $key=>$given_name){
+                    $given_names_characters = str_split($given_name);
+                    $given_names_search[$key] = "*".implode('*', $given_names_characters).'*';
+                }
+
+                if(!isset($document->matched->given_names)) $document->matched->given_names = [];
+                foreach($given_names_split as $key=>$given_name){
+                    if ($given_name === $raw['converted']) {
+                        $document->matched->given_names[$key] = [
                             'value' => $raw['original'],
-                            'confidence' => 0.9,
+                            'confidence' => 1,
                         ];
-                    }
-                } elseif (Str::is($given_names_search, $raw['converted'])) {
-                    if (! $document->matched->given_names || count($document->matched->given_names['value']) > count($raw['value'])) {
-                        $document->matched->given_names = [
-                            'value' => $raw['original'],
-                            'confidence' => 0.75,
-                        ];
+                    } elseif (Str::startsWith($raw['converted'], $given_name)) {
+                        if (! isset($document->matched->given_names[$key]['value']) || strlen($document->matched->given_names[$key]['value']) > strlen($raw['original'])) {
+                            $document->matched->given_names[$key] = [
+                                'value' => $raw['original'],
+                                'confidence' => 0.9,
+                            ];
+                        }
+                    } elseif (Str::is($given_names_search[$key], $raw['converted'])) {
+                        if (! isset($document->matched->given_names[$key]['value']) || strlen($document->matched->given_names[$key]['value']) > strlen($raw['original'])) {
+                            $document->matched->given_names[$key] = [
+                                'value' => $raw['original'],
+                                'confidence' => 0.75,
+                            ];
+                        }
                     }
                 }
+
             }
         }
 
