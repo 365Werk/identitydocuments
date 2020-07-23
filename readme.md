@@ -17,7 +17,7 @@ $ composer require werk365/identitydocuments
 ```
 
 ## Usage
-his package uses Google's Vision API to do OCR, this requires you to make a service account and download the JSON keyfile. In order to use it in this project, store the key found in the file as an array in config/google_key.php like this:
+This package uses Google's Vision API to do OCR, this requires you to make a service account and download the JSON keyfile. In order to use it in this project, store the key found in the file as an array in config/google_key.php like this:
 ```php
 return [
     "type" => "service_account",
