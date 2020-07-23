@@ -109,15 +109,17 @@ class IdParseRaw
                 }
                 // given_names
                 $given_names = $document->parsed->given_names;
-                $given_names_split = explode(" ", $given_names);
+                $given_names_split = explode(' ', $given_names);
                 $given_names_search = [];
-                foreach($given_names_split as $key=>$given_name){
+                foreach ($given_names_split as $key=>$given_name) {
                     $given_names_characters = str_split($given_name);
-                    $given_names_search[$key] = "*".implode('*', $given_names_characters).'*';
+                    $given_names_search[$key] = '*'.implode('*', $given_names_characters).'*';
                 }
 
-                if(!isset($document->matched->given_names)) $document->matched->given_names = [];
-                foreach($given_names_split as $key=>$given_name){
+                if (! isset($document->matched->given_names)) {
+                    $document->matched->given_names = [];
+                }
+                foreach ($given_names_split as $key=>$given_name) {
                     if ($given_name === $raw['converted']) {
                         $document->matched->given_names[$key] = [
                             'value' => $raw['original'],
@@ -139,7 +141,6 @@ class IdParseRaw
                         }
                     }
                 }
-
             }
         }
 
