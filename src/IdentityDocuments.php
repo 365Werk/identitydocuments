@@ -207,14 +207,16 @@ class IdentityDocuments
             );
         }
         $document->parsed = (object) $document->parsed;
-        if(isset($document->parsed->general)) $document->parsed->general = implode('', $document->parsed->general);
+        if (isset($document->parsed->general)) {
+            $document->parsed->general = implode('', $document->parsed->general);
+        }
 
         return $document;
     }
 
     private static function validateMRZ($document): ?string
     {
-        if($document->type === null) {
+        if ($document->type === null) {
             return 'Document';
         }
         // Validate MRZ
