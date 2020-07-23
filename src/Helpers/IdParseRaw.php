@@ -143,7 +143,7 @@ class IdParseRaw
                     } else {
                         $chars_raw = str_split($raw['converted']);
                         $chars_search = implode('*', $chars_raw);
-                        if (Str::is($chars_search, $given_name) && (! isset($document->matched->given_names[$key]['value']) || strlen($document->matched->given_names[$key]['value']) > strlen($raw['original']))){
+                        if (Str::is($chars_search, $given_name) && (! isset($document->matched->given_names[$key]['value']) || strlen($document->matched->given_names[$key]['value']) > strlen($raw['original']))) {
                             $document->matched->given_names[$key] = [
                                 'value' => $raw['original'],
                                 'confidence' => 0.75,
