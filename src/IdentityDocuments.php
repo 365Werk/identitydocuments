@@ -206,15 +206,17 @@ class IdentityDocuments
                 ]
             );
         }
-
         $document->parsed = (object) $document->parsed;
-        $document->parsed->general = implode('', $document->parsed->general);
+        if(isset($document->parsed->general)) $document->parsed->general = implode('', $document->parsed->general);
 
         return $document;
     }
 
     private static function validateMRZ($document): ?string
     {
+        if($document->type === null) {
+            return 'Document';
+        }
         // Validate MRZ
         if (! IdCheck::checkDigit(
             $document->parsed->document_number,
