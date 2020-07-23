@@ -153,6 +153,7 @@ class IdParseRaw
                 }
             }
         }
+        
         return $document;
     }
 }
