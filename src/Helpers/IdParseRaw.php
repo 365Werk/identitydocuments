@@ -138,7 +138,6 @@ class IdParseRaw
                                 'value' => $raw['original'],
                                 'confidence' => 0.75,
                             ];
-                            array_push($bla, $document->matched->given_names[$key]);
                         }
                     } else {
                         $chars_raw = str_split($raw['converted']);
