@@ -2,7 +2,6 @@
 
 namespace werk365\IdentityDocuments;
 
-use Exception;
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
 use Illuminate\Http\Request;
 use werk365\IdentityDocuments\Helpers\IdCheck;
@@ -52,7 +51,9 @@ class IdentityDocuments
 
         // Validate values with MRZ checkdigits
         if ($e = self::validateMRZ($document)) {
-            throw new Exception("Error validating MRZ, invalid $e.");
+            $document->error = $e;
+            $document->success = false;
+            return json_encode($document);
         }
 
         $document = self::stripFiller($document);
@@ -167,6 +168,8 @@ class IdentityDocuments
                     [18, 11],
                 ]
             ));
+            $document->succes = true;
+            $document->error = null;
         } elseif ($document->type === 'TD3') {
             // Row 1
             $document->parsed = IdStr::substrs(
@@ -205,6 +208,8 @@ class IdentityDocuments
                     [21, 22],
                 ]
             );
+            $document->succes = true;
+            $document->error = null;
         }
         $document->parsed = (object) $document->parsed;
         if (isset($document->parsed->general)) {
@@ -217,40 +222,40 @@ class IdentityDocuments
     private static function validateMRZ($document): ?string
     {
         if ($document->type === null) {
-            return 'Document';
+            return 'Document not recognized';
         }
         // Validate MRZ
         if (! IdCheck::checkDigit(
             $document->parsed->document_number,
             $document->parsed->check_document_number
         )) {
-            return 'Document number';
+            return 'Document number check failed';
         }
         if (! IdCheck::checkDigit(
             $document->parsed->date_of_birth,
             $document->parsed->check_date_of_birth
         )) {
-            return 'Date of birth';
+            return 'Date of birth check failed';
         }
         if (! IdCheck::checkDigit(
             $document->parsed->expiration,
             $document->parsed->check_expiration
         )) {
-            return 'Expiration date';
+            return 'Expiration date check failed';
         }
         if ($document->type === 'TD3') {
             if (! IdCheck::checkDigit(
                 $document->parsed->personal_number,
                 $document->parsed->check_personal_number
             )) {
-                return 'Personal number';
+                return 'Personal number check failed';
             }
         }
         if (! IdCheck::checkDigit(
             $document->parsed->general,
             $document->parsed->check_general
         )) {
-            return 'General MRZ check';
+            return 'General MRZ check failed';
         }
 
         return null;

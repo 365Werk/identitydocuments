@@ -2,8 +2,6 @@
 
 namespace werk365\IdentityDocuments\Helpers;
 
-use Exception;
-
 class IdCheck
 {
     public static function checkDigit(string $subject, string $check): ?bool
@@ -24,7 +22,7 @@ class IdCheck
             }
             $value = self::toInt($character);
             if (is_null($value)) {
-                throw new Exception('Error validating MRZ');
+                return false;
             }
             $value = $value * $patern[$weight];
             $total += $value;
