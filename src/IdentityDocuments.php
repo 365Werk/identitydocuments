@@ -169,7 +169,7 @@ class IdentityDocuments
                     [18, 11],
                 ]
             ));
-            $document->succes = true;
+            $document->success = true;
             $document->error = null;
         } elseif ($document->type === 'TD3') {
             // Row 1
@@ -209,7 +209,7 @@ class IdentityDocuments
                     [21, 22],
                 ]
             );
-            $document->succes = true;
+            $document->success = true;
             $document->error = null;
         }
         $document->parsed = (object) $document->parsed;
