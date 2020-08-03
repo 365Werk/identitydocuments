@@ -22,8 +22,8 @@ class IdentityDocuments
         ]);
         if ($validator->fails()) {
             return json_encode([
-                "error" => $validator->errors()->first(),
-                "success" => false,
+                'error' => $validator->errors()->first(),
+                'success' => false,
             ]);
         }
 
@@ -48,8 +48,8 @@ class IdentityDocuments
             $full_img = Image::make($images->back_img);
         } else {
             return json_encode([
-                "error" => "Missing images",
-                "success" => false,
+                'error' => 'Missing images',
+                'success' => false,
             ]);
         }
 
