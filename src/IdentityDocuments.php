@@ -21,10 +21,10 @@ class IdentityDocuments
             'back_img' => 'mimes:jpeg,png,jpg|max:5120',
         ]);
         if ($validator->fails()) {
-            return [
-                'error' => $validator->errors()->first(),
-                'success' => false,
-            ];
+            return json_encode([
+                "error" => $validator->errors()->first(),
+                "success" => false,
+            ]);
         }
 
         $front_img = $request->front_img;
@@ -47,10 +47,10 @@ class IdentityDocuments
         } elseif ($images->back_img) {
             $full_img = Image::make($images->back_img);
         } else {
-            return [
-                'error' => 'Missing images',
-                'success' => false,
-            ];
+            return json_encode([
+                "error" => "Missing images",
+                "success" => false,
+            ]);
         }
 
         $response = $imageAnnotator->textDetection((string) $full_img->encode());
