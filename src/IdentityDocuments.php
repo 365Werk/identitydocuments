@@ -4,37 +4,58 @@ namespace werk365\IdentityDocuments;
 
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use werk365\IdentityDocuments\Helpers\IdCheck;
 use werk365\IdentityDocuments\Helpers\IdParseRaw;
 use werk365\IdentityDocuments\Helpers\IdStr;
+use Intervention\Image\Facades\Image;
+use werk365\IdentityDocuments\Filters\MergeFilter;
 
 class IdentityDocuments
 {
     // Expects 1 or 2 image files in POST request, one front_img and one back_img
     public static function parse(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'front_img' => 'mimes:jpeg,png,jpg|max:5120',
+            'back_img' => 'mimes:jpeg,png,jpg|max:5120',
+        ]);
+        if ($validator->fails()) {
+            return [
+                "error" => $validator->errors()->first(),
+                "success" => false,
+            ];
+        }
+
+        $front_img = $request->front_img;
+        $back_img = $request->back_img;
+
         $imageAnnotator = new ImageAnnotatorClient(
             ['credentials' => config('google_key')]
         );
 
-        $images = (object) [
-            'front_img' => ($request->front_img) ? file_get_contents($request->front_img->getRealPath()) : null,
-            'back_img' => ($request->back_img) ? file_get_contents($request->back_img->getRealPath()) : null,
-        ];
-        $responses = (object) [
-            'front_img' => ($request->front_img) ? $imageAnnotator->textDetection($images->front_img) : null,
-            'back_img' => ($request->back_img) ? $imageAnnotator->textDetection($images->back_img) : null,
+        $images = (object)[
+            'front_img' => ($front_img) ? file_get_contents($front_img->getRealPath()) : null,
+            'back_img' => ($back_img) ? file_get_contents($back_img->getRealPath()) : null,
         ];
 
-        $texts = (object) [
-            'front_img' => ($request->front_img) ? $responses->front_img->getTextAnnotations() : null,
-            'back_img' => ($request->back_img) ? $responses->back_img->getTextAnnotations() : null,
-        ];
+        if ($images->front_img && $images->back_img) {
+            $base_img = Image::make($images->front_img);
+            $full_img = $base_img->filter(new MergeFilter(Image::make($images->back_img)));
+        } elseif ($images->front_img) {
+            $full_img = Image::make($images->front_img);
+        } elseif ($images->back_img) {
+            $full_img = Image::make($images->back_img);
+        } else {
+            return [
+                "error" => "Missing images",
+                "success" => false,
+            ];
+        }
 
-        // Combine text found on both images into one string
-        $full_text = '';
-        $full_text .= ($request->front_img) ? $texts->front_img[0]->getDescription() : '';
-        $full_text .= ($request->back_img) ? $texts->back_img[0]->getDescription() : '';
+        $response = $imageAnnotator->textDetection((string)$full_img->encode());
+        $response_text = $response->getTextAnnotations();
+        $full_text = $response_text[0]->getDescription();
 
         // Split string on newlines into array
         $lines = preg_split('/\r\n|\r|\n/', $full_text);
@@ -60,17 +81,8 @@ class IdentityDocuments
         $document = self::stripFiller($document);
 
         $all = [];
-        if ($texts->front_img) {
-            foreach ($texts->front_img as $text) {
-                array_push($all, [
-                    'original' => $text->getDescription(),
-                    'converted' => IdStr::convert($text->getDescription()),
-                ]);
-            }
-        }
-
-        if ($texts->back_img) {
-            foreach ($texts->back_img as $text) {
+        if ($response_text) {
+            foreach ($response_text as $text) {
                 array_push($all, [
                     'original' => $text->getDescription(),
                     'converted' => IdStr::convert($text->getDescription()),
@@ -87,10 +99,10 @@ class IdentityDocuments
 
     private static function getMRZ(array $lines): object
     {
-        $document = (object) [
+        $document = (object)[
             'type' => null,
             'MRZ' => [],
-            'parsed' => (object) [],
+            'parsed' => (object)[],
         ];
         foreach ($lines as $key => $line) {
             if (strlen($line) === 30 && ($line[0] === 'I' || $line[0] === 'A' || $line[0] === 'C') && strlen($lines[$key + 1]) === 30 && strlen($lines[$key + 2]) === 30) {
@@ -212,7 +224,7 @@ class IdentityDocuments
             $document->success = true;
             $document->error = null;
         }
-        $document->parsed = (object) $document->parsed;
+        $document->parsed = (object)$document->parsed;
         if (isset($document->parsed->general)) {
             $document->parsed->general = implode('', $document->parsed->general);
         }
@@ -226,33 +238,33 @@ class IdentityDocuments
             return 'Document not recognized';
         }
         // Validate MRZ
-        if (! IdCheck::checkDigit(
+        if (!IdCheck::checkDigit(
             $document->parsed->document_number,
             $document->parsed->check_document_number
         )) {
             return 'Document number check failed';
         }
-        if (! IdCheck::checkDigit(
+        if (!IdCheck::checkDigit(
             $document->parsed->date_of_birth,
             $document->parsed->check_date_of_birth
         )) {
             return 'Date of birth check failed';
         }
-        if (! IdCheck::checkDigit(
+        if (!IdCheck::checkDigit(
             $document->parsed->expiration,
             $document->parsed->check_expiration
         )) {
             return 'Expiration date check failed';
         }
         if ($document->type === 'TD3') {
-            if (! IdCheck::checkDigit(
+            if (!IdCheck::checkDigit(
                 $document->parsed->personal_number,
                 $document->parsed->check_personal_number
             )) {
                 return 'Personal number check failed';
             }
         }
-        if (! IdCheck::checkDigit(
+        if (!IdCheck::checkDigit(
             $document->parsed->general,
             $document->parsed->check_general
         )) {
