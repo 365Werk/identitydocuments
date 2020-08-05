@@ -72,6 +72,7 @@ class IdentityDocuments
 
         // Validate values with MRZ checkdigits
         if ($e = self::validateMRZ($document)) {
+            $document = self::stripFiller($document);
             $document->error = $e;
             $document->success = false;
 
