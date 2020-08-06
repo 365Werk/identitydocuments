@@ -4,6 +4,9 @@
 [![Total Downloads][ico-downloads]][link-downloads]
 [![StyleCI][ico-styleci]][link-styleci]
 
+For general questions and suggestions join gitter:
+(https://badges.gitter.im/werk365/identitydocuments.svg)](https://gitter.im/werk365/identitydocuments?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Package to parse Machine Readable Passports and other travel documents from image in Laravel.
 
 MRZ is parsed and validated by check numbers and returned.
