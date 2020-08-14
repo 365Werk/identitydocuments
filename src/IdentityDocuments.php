@@ -244,31 +244,31 @@ class IdentityDocuments
     private static function validateMRZ($document): ?string
     {
         $checks = (object)[
-            "document_number" => [
+            "document_number" => (object) [
                 "value" => $document->parsed->document_number,
                 "check_value" => $document->parsed->check_document_number,
                 "error_msg" => "Document number check failed",
                 "document_type" => ['TD1', 'TD3']
             ],
-            "date_of_birth" => [
+            "date_of_birth" => (object) [
                 "value" => $document->parsed->date_of_birth,
                 "check_value" => $document->parsed->check_date_of_birth,
                 "error_msg" => "Date of birth check failed",
                 "document_type" => ['TD1', 'TD3']
             ],
-            "expiration_date" => [
-                "value" => $document->parsed->expiration_date,
-                "check_value" => $document->parsed->check_date_of_birth,
+            "expiration" => (object) [
+                "value" => $document->parsed->expiration,
+                "check_value" => $document->parsed->check_expiration,
                 "error_msg" => "Expiration date check failed",
                 "document_type" => ['TD1', 'TD3']
             ],
-            "personal_number" => [
+            "personal_number" => (object) [
                 "value" => $document->parsed->personal_number,
-                "check_value" => $document->parsed->check_personal_number,
+                "check_value" => $document->parsed->check_personal_number??null,
                 "error_msg" => "Personal number check failed",
                 "document_type" => ['TD3']
             ],
-            "general" => [
+            "general" => (object) [
                 "value" => $document->parsed->general,
                 "check_value" => $document->parsed->check_general,
                 "error_msg" => "General check failed",
