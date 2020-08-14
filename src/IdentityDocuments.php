@@ -34,7 +34,7 @@ class IdentityDocuments
             ['credentials' => config('google_key')]
         );
 
-        $images = (object) [
+        $images = (object)[
             'front_img' => ($front_img) ? file_get_contents($front_img->getRealPath()) : null,
             'back_img' => ($back_img) ? file_get_contents($back_img->getRealPath()) : null,
         ];
@@ -53,7 +53,7 @@ class IdentityDocuments
             ]);
         }
 
-        $response = $imageAnnotator->textDetection((string) $full_img->encode());
+        $response = $imageAnnotator->textDetection((string)$full_img->encode());
         $response_text = $response->getTextAnnotations();
         $full_text = $response_text[0]->getDescription();
 
@@ -72,7 +72,12 @@ class IdentityDocuments
 
         // Validate values with MRZ checkdigits
         if ($e = self::validateMRZ($document)) {
-            $document = self::stripFiller($document);
+            try {
+                $document = self::stripFiller($document);
+            } catch (\Exception $exception) {
+                $e .= " and stripFiller failed.";
+            }
+
             $document->error = $e;
             $document->success = false;
 
@@ -93,17 +98,20 @@ class IdentityDocuments
 
         $document->raw = $all;
         $document = IdParseRaw::parse($document);
-        unset($document->raw);
+
+        if (!config('identitydocuments.return_all')) {
+            unset($document->raw);
+        }
 
         return json_encode($document);
     }
 
     private static function getMRZ(array $lines): object
     {
-        $document = (object) [
+        $document = (object)[
             'type' => null,
             'MRZ' => [],
-            'parsed' => (object) [],
+            'parsed' => (object)[],
         ];
         foreach ($lines as $key => $line) {
             if (strlen($line) === 30 && ($line[0] === 'I' || $line[0] === 'A' || $line[0] === 'C') && strlen($lines[$key + 1]) === 30 && strlen($lines[$key + 2]) === 30) {
@@ -225,7 +233,7 @@ class IdentityDocuments
             $document->success = true;
             $document->error = null;
         }
-        $document->parsed = (object) $document->parsed;
+        $document->parsed = (object)$document->parsed;
         if (isset($document->parsed->general)) {
             $document->parsed->general = implode('', $document->parsed->general);
         }
@@ -235,48 +243,61 @@ class IdentityDocuments
 
     private static function validateMRZ($document): ?string
     {
+        $checks = (object)[
+            "document_number" => [
+                "value" => $document->parsed->document_number,
+                "check_value" => $document->parsed->check_document_number,
+                "error_msg" => "Document number check failed",
+                "document_type" => ['TD1', 'TD3']
+            ],
+            "date_of_birth" => [
+                "value" => $document->parsed->date_of_birth,
+                "check_value" => $document->parsed->check_date_of_birth,
+                "error_msg" => "Date of birth check failed",
+                "document_type" => ['TD1', 'TD3']
+            ],
+            "expiration_date" => [
+                "value" => $document->parsed->expiration_date,
+                "check_value" => $document->parsed->check_date_of_birth,
+                "error_msg" => "Expiration date check failed",
+                "document_type" => ['TD1', 'TD3']
+            ],
+            "personal_number" => [
+                "value" => $document->parsed->personal_number,
+                "check_value" => $document->parsed->check_personal_number,
+                "error_msg" => "Personal number check failed",
+                "document_type" => ['TD3']
+            ],
+            "general" => [
+                "value" => $document->parsed->general,
+                "check_value" => $document->parsed->check_general,
+                "error_msg" => "General check failed",
+                "document_type" => ['TD1, TD3']
+            ],
+        ];
+
         if ($document->type === null) {
             return 'Document not recognized';
         }
-        // Validate MRZ
-        if (! IdCheck::checkDigit(
-            $document->parsed->document_number,
-            $document->parsed->check_document_number
-        )) {
-            return 'Document number check failed';
-        }
-        if (! IdCheck::checkDigit(
-            $document->parsed->date_of_birth,
-            $document->parsed->check_date_of_birth
-        )) {
-            return 'Date of birth check failed';
-        }
-        if (! IdCheck::checkDigit(
-            $document->parsed->expiration,
-            $document->parsed->check_expiration
-        )) {
-            return 'Expiration date check failed';
-        }
-        if ($document->type === 'TD3') {
-            if (! IdCheck::checkDigit(
-                $document->parsed->personal_number,
-                $document->parsed->check_personal_number
-            )) {
-                return 'Personal number check failed';
+
+        foreach ($checks as $key => $check) {
+            if (in_array($document->type, $check->document_type)) {
+                if (!IdCheck::checkDigit(
+                    $check->value,
+                    $check->check_value
+                )) {
+                    return $check->error_msg;
+                }
             }
-        }
-        if (! IdCheck::checkDigit(
-            $document->parsed->general,
-            $document->parsed->check_general
-        )) {
-            return 'General MRZ check failed';
         }
 
         return null;
     }
 
-    private static function stripFiller(object $document): object
-    {
+    private
+    static function stripFiller(
+        object $document
+    ): object {
         $names = explode('<<', $document->parsed->names, 2);
         $document->parsed->surname = trim(str_replace('<', ' ', $names[0]));
         $document->parsed->given_names = trim(str_replace('<', ' ', $names[1]));

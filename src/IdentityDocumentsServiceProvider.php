@@ -22,6 +22,12 @@ class IdentityDocumentsServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->bootForConsole();
         }
+
+        if (function_exists('config_path')) { // function not available and 'publish' not relevant in Lumen
+            $this->publishes([
+                __DIR__.'/../config/identitydocuments.php' => config_path('identitydocuments.php'),
+            ], 'identitydocuments.config');
+        }
     }
 
     /**
