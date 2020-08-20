@@ -283,7 +283,7 @@ class IdentityDocuments
         foreach ($checks as $key => $check) {
             if (in_array($document->type, $check->document_type)) {
                 $check->value = $document->parsed->$key ?? null;
-                $check_key = $key?"check_" . $key:null;
+                $check_key = $key ? 'check_'.$key : null;
                 $check->check_value = $document->parsed->$check_key ?? null;
                 if (! IdCheck::checkDigit(
                     $check->value,
