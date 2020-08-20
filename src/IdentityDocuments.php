@@ -63,23 +63,11 @@ class IdentityDocuments
         foreach ($lines as $key => $line) {
             $lines[$key] = preg_replace('/\s+/', '', $line);
         }
-
         // Get MRZ lines from text
         $document = self::getMRZ($lines);
 
         // Parse lines to known values
         $document = self::parseMRZ($document);
-
-        // Validate values with MRZ checkdigits
-        if ($e = self::validateMRZ($document)) {
-            $document = self::stripFiller($document);
-            $document->error = $e;
-            $document->success = false;
-
-            return json_encode($document);
-        }
-
-        $document = self::stripFiller($document);
 
         $all = [];
         if ($response_text) {
@@ -92,8 +80,32 @@ class IdentityDocuments
         }
 
         $document->raw = $all;
+
+        // Validate values with MRZ checkdigits
+        if ($e = self::validateMRZ($document)) {
+            try {
+                $document = self::stripFiller($document);
+            } catch (\Exception $exception) {
+                $e .= ' and stripFiller failed.';
+            }
+
+            $document->error = $e;
+            $document->success = false;
+
+            if (! config('identitydocuments.return_all')) {
+                unset($document->raw);
+            }
+
+            return json_encode($document);
+        }
+
+        $document = self::stripFiller($document);
+
         $document = IdParseRaw::parse($document);
-        unset($document->raw);
+
+        if (! config('identitydocuments.return_all')) {
+            unset($document->raw);
+        }
 
         return json_encode($document);
     }
@@ -238,45 +250,57 @@ class IdentityDocuments
         if ($document->type === null) {
             return 'Document not recognized';
         }
-        // Validate MRZ
-        if (! IdCheck::checkDigit(
-            $document->parsed->document_number,
-            $document->parsed->check_document_number
-        )) {
-            return 'Document number check failed';
-        }
-        if (! IdCheck::checkDigit(
-            $document->parsed->date_of_birth,
-            $document->parsed->check_date_of_birth
-        )) {
-            return 'Date of birth check failed';
-        }
-        if (! IdCheck::checkDigit(
-            $document->parsed->expiration,
-            $document->parsed->check_expiration
-        )) {
-            return 'Expiration date check failed';
-        }
-        if ($document->type === 'TD3') {
-            if (! IdCheck::checkDigit(
-                $document->parsed->personal_number,
-                $document->parsed->check_personal_number
-            )) {
-                return 'Personal number check failed';
+
+        $checks = (object) [
+            'document_number' => (object) [
+                'value' => $document->parsed->document_number,
+                'check_value' => $document->parsed->check_document_number,
+                'error_msg' => 'Document number check failed',
+                'document_type' => ['TD1', 'TD3'],
+            ],
+            'date_of_birth' => (object) [
+                'value' => $document->parsed->date_of_birth,
+                'check_value' => $document->parsed->check_date_of_birth,
+                'error_msg' => 'Date of birth check failed',
+                'document_type' => ['TD1', 'TD3'],
+            ],
+            'expiration' => (object) [
+                'value' => $document->parsed->expiration,
+                'check_value' => $document->parsed->check_expiration,
+                'error_msg' => 'Expiration date check failed',
+                'document_type' => ['TD1', 'TD3'],
+            ],
+            'personal_number' => (object) [
+                'value' => $document->parsed->personal_number ?? null,
+                'check_value' => $document->parsed->check_personal_number ?? null,
+                'error_msg' => 'Personal number check failed',
+                'document_type' => ['TD3'],
+            ],
+            'general' => (object) [
+                'value' => $document->parsed->general,
+                'check_value' => $document->parsed->check_general,
+                'error_msg' => 'General check failed',
+                'document_type' => ['TD1, TD3'],
+            ],
+        ];
+
+        foreach ($checks as $key => $check) {
+            if (in_array($document->type, $check->document_type)) {
+                if (! IdCheck::checkDigit(
+                    $check->value,
+                    $check->check_value
+                )) {
+                    return $check->error_msg;
+                }
             }
-        }
-        if (! IdCheck::checkDigit(
-            $document->parsed->general,
-            $document->parsed->check_general
-        )) {
-            return 'General MRZ check failed';
         }
 
         return null;
     }
 
-    private static function stripFiller(object $document): object
-    {
+    private static function stripFiller(
+        object $document
+    ): object {
         $names = explode('<<', $document->parsed->names, 2);
         $document->parsed->surname = trim(str_replace('<', ' ', $names[0]));
         $document->parsed->given_names = trim(str_replace('<', ' ', $names[1]));
