@@ -5,7 +5,6 @@ namespace werk365\identitydocuments;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\ServiceProvider;
 
-
 class IdentityDocumentsServiceProvider extends ServiceProvider
 {
     /**
