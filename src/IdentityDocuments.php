@@ -259,32 +259,22 @@ class IdentityDocuments
 
         $checks = (object) [
             'document_number' => (object) [
-                'value' => $document->parsed->document_number,
-                'check_value' => $document->parsed->check_document_number,
                 'error_msg' => 'Document number check failed',
                 'document_type' => ['TD1', 'TD3'],
             ],
             'date_of_birth' => (object) [
-                'value' => $document->parsed->date_of_birth,
-                'check_value' => $document->parsed->check_date_of_birth,
                 'error_msg' => 'Date of birth check failed',
                 'document_type' => ['TD1', 'TD3'],
             ],
             'expiration' => (object) [
-                'value' => $document->parsed->expiration,
-                'check_value' => $document->parsed->check_expiration,
                 'error_msg' => 'Expiration date check failed',
                 'document_type' => ['TD1', 'TD3'],
             ],
             'personal_number' => (object) [
-                'value' => $document->parsed->personal_number ?? null,
-                'check_value' => $document->parsed->check_personal_number ?? null,
                 'error_msg' => 'Personal number check failed',
                 'document_type' => ['TD3'],
             ],
             'general' => (object) [
-                'value' => $document->parsed->general,
-                'check_value' => $document->parsed->check_general,
                 'error_msg' => 'General check failed',
                 'document_type' => ['TD1, TD3'],
             ],
@@ -292,6 +282,9 @@ class IdentityDocuments
 
         foreach ($checks as $key => $check) {
             if (in_array($document->type, $check->document_type)) {
+                $check->value = $document->parsed->$key ?? null;
+                $check_key = $key?"check_" . $key:null;
+                $check->check_value = $document->parsed->$check_key ?? null;
                 if (! IdCheck::checkDigit(
                     $check->value,
                     $check->check_value
