@@ -242,6 +242,12 @@ class IdentityDocuments
             $document->parsed->general = implode('', $document->parsed->general);
         }
 
+        if(in_array($document->parsed->country, config('identitydocuments.countries_convert_o_to_zero')) || config('identitydocuments.countries_convert_o_to_zero')){
+            $re = '/o|O/m';
+            $subst = '0';
+            $document->parsed->document_number = preg_replace($re, $subst, $document->parsed->document_number);
+        }
+
         return $document;
     }
 
