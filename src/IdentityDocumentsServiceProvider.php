@@ -3,7 +3,6 @@
 namespace werk365\identitydocuments;
 
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 
 class IdentityDocumentsServiceProvider extends ServiceProvider

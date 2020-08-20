@@ -34,7 +34,7 @@ class IdentityDocuments
             ['credentials' => config('google_key')]
         );
 
-        $images = (object)[
+        $images = (object) [
             'front_img' => ($front_img) ? file_get_contents($front_img->getRealPath()) : null,
             'back_img' => ($back_img) ? file_get_contents($back_img->getRealPath()) : null,
         ];
@@ -53,7 +53,7 @@ class IdentityDocuments
             ]);
         }
 
-        $response = $imageAnnotator->textDetection((string)$full_img->encode());
+        $response = $imageAnnotator->textDetection((string) $full_img->encode());
         $response_text = $response->getTextAnnotations();
         $full_text = $response_text[0]->getDescription();
 
@@ -86,13 +86,13 @@ class IdentityDocuments
             try {
                 $document = self::stripFiller($document);
             } catch (\Exception $exception) {
-                $e .= " and stripFiller failed.";
+                $e .= ' and stripFiller failed.';
             }
 
             $document->error = $e;
             $document->success = false;
 
-            if (!config('identitydocuments.return_all')) {
+            if (! config('identitydocuments.return_all')) {
                 unset($document->raw);
             }
 
@@ -103,7 +103,7 @@ class IdentityDocuments
 
         $document = IdParseRaw::parse($document);
 
-        if (!config('identitydocuments.return_all')) {
+        if (! config('identitydocuments.return_all')) {
             unset($document->raw);
         }
 
@@ -112,10 +112,10 @@ class IdentityDocuments
 
     private static function getMRZ(array $lines): object
     {
-        $document = (object)[
+        $document = (object) [
             'type' => null,
             'MRZ' => [],
-            'parsed' => (object)[],
+            'parsed' => (object) [],
         ];
         foreach ($lines as $key => $line) {
             if (strlen($line) === 30 && ($line[0] === 'I' || $line[0] === 'A' || $line[0] === 'C') && strlen($lines[$key + 1]) === 30 && strlen($lines[$key + 2]) === 30) {
@@ -237,7 +237,7 @@ class IdentityDocuments
             $document->success = true;
             $document->error = null;
         }
-        $document->parsed = (object)$document->parsed;
+        $document->parsed = (object) $document->parsed;
         if (isset($document->parsed->general)) {
             $document->parsed->general = implode('', $document->parsed->general);
         }
@@ -251,42 +251,42 @@ class IdentityDocuments
             return 'Document not recognized';
         }
 
-        $checks = (object)[
-            "document_number" => (object)[
-                "value" => $document->parsed->document_number,
-                "check_value" => $document->parsed->check_document_number,
-                "error_msg" => "Document number check failed",
-                "document_type" => ['TD1', 'TD3']
+        $checks = (object) [
+            'document_number' => (object) [
+                'value' => $document->parsed->document_number,
+                'check_value' => $document->parsed->check_document_number,
+                'error_msg' => 'Document number check failed',
+                'document_type' => ['TD1', 'TD3'],
             ],
-            "date_of_birth" => (object)[
-                "value" => $document->parsed->date_of_birth,
-                "check_value" => $document->parsed->check_date_of_birth,
-                "error_msg" => "Date of birth check failed",
-                "document_type" => ['TD1', 'TD3']
+            'date_of_birth' => (object) [
+                'value' => $document->parsed->date_of_birth,
+                'check_value' => $document->parsed->check_date_of_birth,
+                'error_msg' => 'Date of birth check failed',
+                'document_type' => ['TD1', 'TD3'],
             ],
-            "expiration" => (object)[
-                "value" => $document->parsed->expiration,
-                "check_value" => $document->parsed->check_expiration,
-                "error_msg" => "Expiration date check failed",
-                "document_type" => ['TD1', 'TD3']
+            'expiration' => (object) [
+                'value' => $document->parsed->expiration,
+                'check_value' => $document->parsed->check_expiration,
+                'error_msg' => 'Expiration date check failed',
+                'document_type' => ['TD1', 'TD3'],
             ],
-            "personal_number" => (object)[
-                "value" => $document->parsed->personal_number ?? null,
-                "check_value" => $document->parsed->check_personal_number ?? null,
-                "error_msg" => "Personal number check failed",
-                "document_type" => ['TD3']
+            'personal_number' => (object) [
+                'value' => $document->parsed->personal_number ?? null,
+                'check_value' => $document->parsed->check_personal_number ?? null,
+                'error_msg' => 'Personal number check failed',
+                'document_type' => ['TD3'],
             ],
-            "general" => (object)[
-                "value" => $document->parsed->general,
-                "check_value" => $document->parsed->check_general,
-                "error_msg" => "General check failed",
-                "document_type" => ['TD1, TD3']
+            'general' => (object) [
+                'value' => $document->parsed->general,
+                'check_value' => $document->parsed->check_general,
+                'error_msg' => 'General check failed',
+                'document_type' => ['TD1, TD3'],
             ],
         ];
 
         foreach ($checks as $key => $check) {
             if (in_array($document->type, $check->document_type)) {
-                if (!IdCheck::checkDigit(
+                if (! IdCheck::checkDigit(
                     $check->value,
                     $check->check_value
                 )) {
@@ -298,8 +298,7 @@ class IdentityDocuments
         return null;
     }
 
-    private
-    static function stripFiller(
+    private static function stripFiller(
         object $document
     ): object {
         $names = explode('<<', $document->parsed->names, 2);
