@@ -1,17 +1,14 @@
 <?php
 
-namespace werk365\IdentityDocuments;
+namespace werk365\identitydocuments;
 
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 
 class IdentityDocumentsServiceProvider extends ServiceProvider
 {
-    /**
-     * Perform post-registration booting of services.
-     *
-     * @return void
-     */
-    public function boot()
+    public function boot(Filesystem $filesystem)
     {
         // $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'werk365');
         // $this->loadViewsFrom(__DIR__.'/../resources/views', 'werk365');
@@ -26,7 +23,7 @@ class IdentityDocumentsServiceProvider extends ServiceProvider
         if (function_exists('config_path')) { // function not available and 'publish' not relevant in Lumen
             $this->publishes([
                 __DIR__.'/../config/identitydocuments.php' => config_path('identitydocuments.php'),
-            ], 'identitydocuments.config');
+            ], 'config');
         }
     }
 
@@ -41,7 +38,7 @@ class IdentityDocumentsServiceProvider extends ServiceProvider
 
         // Register the service the package provides.
         $this->app->singleton('identitydocuments', function ($app) {
-            return new IdentityDocuments;
+            return new identitydocuments;
         });
     }
 
@@ -70,17 +67,17 @@ class IdentityDocumentsServiceProvider extends ServiceProvider
         // Publishing the views.
         /*$this->publishes([
             __DIR__.'/../resources/views' => base_path('resources/views/vendor/werk365'),
-        ], 'identitydocuments.views');*/
+        ], 'jwtAuthRoles.views');*/
 
         // Publishing assets.
         /*$this->publishes([
             __DIR__.'/../resources/assets' => public_path('vendor/werk365'),
-        ], 'identitydocuments.views');*/
+        ], 'jwtAuthRoles.views');*/
 
         // Publishing the translation files.
         /*$this->publishes([
             __DIR__.'/../resources/lang' => resource_path('lang/vendor/werk365'),
-        ], 'identitydocuments.views');*/
+        ], 'jwtAuthRoles.views');*/
 
         // Registering package commands.
         // $this->commands([]);

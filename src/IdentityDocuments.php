@@ -63,28 +63,11 @@ class IdentityDocuments
         foreach ($lines as $key => $line) {
             $lines[$key] = preg_replace('/\s+/', '', $line);
         }
-
         // Get MRZ lines from text
         $document = self::getMRZ($lines);
 
         // Parse lines to known values
         $document = self::parseMRZ($document);
-
-        // Validate values with MRZ checkdigits
-        if ($e = self::validateMRZ($document)) {
-            try {
-                $document = self::stripFiller($document);
-            } catch (\Exception $exception) {
-                $e .= " and stripFiller failed.";
-            }
-
-            $document->error = $e;
-            $document->success = false;
-
-            return json_encode($document);
-        }
-
-        $document = self::stripFiller($document);
 
         $all = [];
         if ($response_text) {
@@ -97,6 +80,27 @@ class IdentityDocuments
         }
 
         $document->raw = $all;
+
+        // Validate values with MRZ checkdigits
+        if ($e = self::validateMRZ($document)) {
+            try {
+                $document = self::stripFiller($document);
+            } catch (\Exception $exception) {
+                $e .= " and stripFiller failed.";
+            }
+
+            $document->error = $e;
+            $document->success = false;
+
+            if (!config('identitydocuments.return_all')) {
+                unset($document->raw);
+            }
+
+            return json_encode($document);
+        }
+
+        $document = self::stripFiller($document);
+
         $document = IdParseRaw::parse($document);
 
         if (!config('identitydocuments.return_all')) {
@@ -243,42 +247,42 @@ class IdentityDocuments
 
     private static function validateMRZ($document): ?string
     {
+        if ($document->type === null) {
+            return 'Document not recognized';
+        }
+
         $checks = (object)[
-            "document_number" => (object) [
+            "document_number" => (object)[
                 "value" => $document->parsed->document_number,
                 "check_value" => $document->parsed->check_document_number,
                 "error_msg" => "Document number check failed",
                 "document_type" => ['TD1', 'TD3']
             ],
-            "date_of_birth" => (object) [
+            "date_of_birth" => (object)[
                 "value" => $document->parsed->date_of_birth,
                 "check_value" => $document->parsed->check_date_of_birth,
                 "error_msg" => "Date of birth check failed",
                 "document_type" => ['TD1', 'TD3']
             ],
-            "expiration" => (object) [
+            "expiration" => (object)[
                 "value" => $document->parsed->expiration,
                 "check_value" => $document->parsed->check_expiration,
                 "error_msg" => "Expiration date check failed",
                 "document_type" => ['TD1', 'TD3']
             ],
-            "personal_number" => (object) [
-                "value" => $document->parsed->personal_number,
-                "check_value" => $document->parsed->check_personal_number??null,
+            "personal_number" => (object)[
+                "value" => $document->parsed->personal_number ?? null,
+                "check_value" => $document->parsed->check_personal_number ?? null,
                 "error_msg" => "Personal number check failed",
                 "document_type" => ['TD3']
             ],
-            "general" => (object) [
+            "general" => (object)[
                 "value" => $document->parsed->general,
                 "check_value" => $document->parsed->check_general,
                 "error_msg" => "General check failed",
                 "document_type" => ['TD1, TD3']
             ],
         ];
-
-        if ($document->type === null) {
-            return 'Document not recognized';
-        }
 
         foreach ($checks as $key => $check) {
             if (in_array($document->type, $check->document_type)) {
