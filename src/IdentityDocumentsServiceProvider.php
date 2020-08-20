@@ -37,7 +37,7 @@ class IdentityDocumentsServiceProvider extends ServiceProvider
 
         // Register the service the package provides.
         $this->app->singleton('identitydocuments', function ($app) {
-            return new identitydocuments;
+            return new IdentityDocuments;
         });
     }
 
